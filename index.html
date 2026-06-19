@@ -92,27 +92,27 @@
     const SUPABASE_KEY = 'sb_publishable_42BHwMk5a5rRgT65iY4JEw_9pFr8bzl';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // DICCIONARIO ACTUALIZADO CON LAS SELECCIONES DE LA NUEVA IMAGEN
     const codigosBanderas = {
-        "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "República Checa": "cz",
-        "Canadá": "ca", "Bosnia": "ba", "Estados Unidos": "us", "Paraguay": "py",
-        "Brasil": "br", "Marruecos": "ma", "Alemania": "de", "Argentina": "ar",
-        "Francia": "fr", "Australia": "au", "Egipto": "eg", "Escocia": "gb-sct",
-        "España": "es", "Japón": "jp", "Nigeria": "ng", "Ecuador": "ec",
-        "Bélgica": "be", "Perú": "pe", "Irán": "ir", "Ucrania": "ua",
-        "Portugal": "pt", "Ghana": "gh", "Chile": "cl", "Polonia": "pl",
-        "Italia": "it", "Camerún": "cm", "Uruguay": "uy", "Turquía": "tr",
-        "Países Bajos": "nl", "Argelia": "dz", "Colombia": "co", "Austria": "at",
-        "Inglaterra": "gb-eng", "Túnez": "tn", "Croacia": "hr", "Costa Rica": "cr",
-        "Gales": "gb-wls", "Arabia Saudita": "sa", "Suiza": "ch", "Dinamarca": "dk",
-        "Senegal": "sn", "Nueva Zelanda": "nz"
+        "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "Chequia": "cz",
+        "Canadá": "ca", "Bosnia": "ba", "Qatar": "qa", "Suiza": "ch",
+        "Brasil": "br", "Marruecos": "ma", "Haití": "ht", "Escocia": "gb-sct",
+        "EE.UU.": "us", "Paraguay": "py", "Australia": "au", "Turquía": "tr",
+        "Alemania": "de", "Curazao": "cw", "C. de Marfil": "ci", "Ecuador": "ec",
+        "Países Bajos": "nl", "Japón": "jp", "Suecia": "se", "Túnez": "tn",
+        "Bélgica": "be", "Egipto": "eg", "Irán": "ir", "N. Zelanda": "nz",
+        "España": "es", "Cabo Verde": "cv", "Arabia S.": "sa", "Uruguay": "uy",
+        "Francia": "fr", "Senegal": "sn", "Irak": "iq", "Noruega": "no",
+        "Argentina": "ar", "Argelia": "dz", "Austria": "at", "Jordania": "jo",
+        "Portugal": "pt", "RD Congo": "cd", "Uzbekistán": "uz", "Colombia": "co",
+        "Inglaterra": "gb-eng", "Croacia": "hr", "Ghana": "gh", "Panamá": "pa"
     };
 
-    // Estado local para persistir el avance de las llaves K.O. manuales
     let avancesKO = JSON.parse(localStorage.getItem('avances_ko_2026')) || {};
 
     async function cargarPartidos() {
         const { data: partidos, error } = await _supabase.from('partidos').select('*').order('id');
-        if (partidos) {
+        if (partidos && partidos.length > 0) {
             const clasificados = renderizarFixture(partidos);
             calcularYRenderizarCruces(clasificados);
         }
@@ -218,26 +218,23 @@
             if(lista[2]) terceros.push({ pais: lista[2][0], pts: lista[2][1].pts, dg: lista[2][1].dg, gf: lista[2][1].gf, grupo: letra });
         });
 
-        // Ordenar los mejores terceros de todo el mundial
         terceros.sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);
         let top3 = {};
         for(let i=0; i<12; i++) {
             if(terceros[i]) top3[terceros[i].grupo] = terceros[i].pais;
         }
 
-        // Función para pescar un tercero comodín si no está definido
         const get3 = (opciones) => {
             for(let o of opciones) { if(top3[o]) return top3[o]; }
             return `3º ${opciones.join('/')}`;
         };
 
-        // ESTRUCTURA DE LOS 16 CRUCES DIRECTOS OFICIALES DE LA GRAFICA FIFA (Dieciseisavos)
-        // Mapeados uno por uno de forma exacta a tu imagen de izquierda a derecha y arriba a abajo
+        // CRUCES DE DIECISEISAVOS SEGÚN EL CUADRANTE DE LA FIFA EN TU IMAGEN
         const llavesIniciales = [
             { id: "L1", e1: primeros["E"], e2: get3(["A","B","C","D","F"]) },
             { id: "L2", e1: segundos["A"], e2: segundos["B"] },
             { id: "L3", e1: primeros["B"], e2: get3(["C","D","F","G","H"]) },
-            { id: "L4", e1: segundos["A"], e2: segundos["B"] }, // Cruce simétrico de la gráfica
+            { id: "L4", e1: segundos["A"], e2: segundos["B"] }, 
             { id: "L5", e1: segundos["K"], e2: segundos["L"] },
             { id: "L6", e1: primeros["H"], e2: segundos["J"] },
             { id: "L7", e1: primeros["D"], e2: get3(["B","E","F","I","J"]) },
@@ -252,46 +249,38 @@
             { id: "L16", e1: primeros["K"], e2: get3(["D","E","I","J","L"]) }
         ];
 
-        // RENDERIZAR DIECISEISAVOS (Fase 32)
         const div32 = document.getElementById('fase-32'); div32.innerHTML = '';
         llavesIniciales.forEach(ll => {
             const p1 = avancesKO[ll.id + '_1'] || ll.e1;
             const p2 = avancesKO[ll.id + '_2'] || ll.e2;
-            div32.appendChild(crearTarjetaLlaveHtml(ll.id, p1, p2, (ganador) => avanzarEtapa(ll.id, ganador, 16)));
+            div32.appendChild(crearTarjetaLlaveHtml(ll.id, p1, p2));
         });
 
-        // RECONSTRUIR FASES SIGUIENTES BASADAS EN EL AVANCE
-        const renderFaseSiguiente = (faseActual, faseDestino, prefixDestino, saltos) => {
+        const renderFaseSiguiente = (faseDestino, prefixDestino) => {
             const divDestino = document.getElementById(`fase-${faseDestino}`);
             divDestino.innerHTML = '';
             for (let i = 1; i <= faseDestino; i++) {
                 const idHijo = `${prefixDestino}${i}`;
-                const padreId1 = `L${(i * 2) - 1}`;
-                const padreId2 = `L${i * 2}`;
-                
-                // Si ya estamos en fases avanzadas, hereda del prefijo anterior
-                const p1 = avancesKO[idHijo + '_1'] || avancesKO[padreId1 + '_ganador'] || `Ganador ${padreId1}`;
-                const p2 = avancesKO[idHijo + '_2'] || avancesKO[padreId2 + '_ganador'] || `Ganador ${padreId2}`;
-                
-                divDestino.appendChild(crearTarjetaLlaveHtml(idHijo, p1, p2, (ganador) => avanzarEtapa(idHijo, ganador, faseDestino / 2)));
+                const p1 = avancesKO[idHijo + '_1'] || `Ganador`;
+                const p2 = avancesKO[idHijo + '_2'] || `Ganador`;
+                divDestino.appendChild(crearTarjetaLlaveHtml(idHijo, p1, p2));
             }
         };
 
-        renderFaseSiguiente(32, 16, "O", 2); // Octavos
-        renderFaseSiguiente(16, 8, "C", 4);  // Cuartos
-        renderFaseSiguiente(8, 4, "S", 8);   // Semifinal
+        renderFaseSiguiente(16, "O"); 
+        renderFaseSiguiente(8, "C");  
+        renderFaseSiguiente(4, "S");   
 
-        // Gran Final (Fase 2)
         const div2 = document.getElementById('fase-2'); div2.innerHTML = '';
-        const p1Final = avancesKO['F1_1'] || avancesKO['S1_ganador'] || "Finalista 1";
-        const p2Final = avancesKO['F1_2'] || avancesKO['S2_ganador'] || "Finalista 2";
+        const p1Final = avancesKO['F1_1'] || "Finalista 1";
+        const p2Final = avancesKO['F1_2'] || "Finalista 2";
         const campeon = avancesKO['F1_ganador'] ? `🏆 ¡CAMPEÓN: ${avancesKO['F1_ganador']}!` : "Definir Campeón";
         
         div2.innerHTML = `<div style="text-align:center; font-weight:bold; color:#ffc107; margin-bottom:10px;">${campeon}</div>`;
-        div2.appendChild(crearTarjetaLlaveHtml('F1', p1Final, p2Final, (ganador) => avanzarEtapa('F1', ganador, 0)));
+        div2.appendChild(crearTarjetaLlaveHtml('F1', p1Final, p2Final));
     }
 
-    function crearTarjetaLlaveHtml(idLlave, equipo1, equipo2, callbackAvanzar) {
+    function crearTarjetaLlaveHtml(idLlave, equipo1, equipo2) {
         const div = document.createElement('div');
         div.className = 'tarjeta-llave';
         const cod1 = codigosBanderas[equipo1] || "un";
@@ -307,28 +296,28 @@
                 ${equipo2.includes('Ganador') || equipo2.includes('º') || equipo2.includes('ista') ? '' : `<button class="btn-avanzar" onclick="window.ejecutarAvance('${idLlave}', '${equipo2}')">✓</button>`}
             </div>
         `;
-        window.ejecutarAvance = (id, ganador) => {
-            avancesKO[id + '_ganador'] = ganador;
-            // Calcular destino automático en la siguiente columna
-            let tipo = id.charAt(0);
-            let num = parseInt(id.replace(/[A-Z]/g, ""));
-            let siguienteFila = Math.ceil(num / 2);
-            let posicionHijo = num % 2 === 0 ? 2 : 1; // 1 = arriba, 2 = abajo
-
-            let siguientePrefijo = "";
-            if (tipo === 'L') siguientePrefijo = 'O';
-            else if (tipo === 'O') siguientePrefijo = 'C';
-            else if (tipo === 'C') siguientePrefijo = 'S';
-            else if (tipo === 'S') siguientePrefijo = 'F';
-
-            if(siguientePrefijo !== "") {
-                avancesKO[`${siguientePrefijo}${siguienteFila}_${posicionHijo}`] = ganador;
-            }
-            localStorage.setItem('avances_ko_2026', JSON.stringify(avancesKO));
-            cargarPartidos();
-        };
         return div;
     }
+
+    window.ejecutarAvance = (id, ganador) => {
+        avancesKO[id + '_ganador'] = ganador;
+        let tipo = id.charAt(0);
+        let num = parseInt(id.replace(/[A-Z]/g, ""));
+        let siguienteFila = Math.ceil(num / 2);
+        let posicionHijo = num % 2 === 0 ? 2 : 1; 
+
+        let siguientePrefijo = "";
+        if (tipo === 'L') siguientePrefijo = 'O';
+        else if (tipo === 'O') siguientePrefijo = 'C';
+        else if (tipo === 'C') siguientePrefijo = 'S';
+        else if (tipo === 'S') siguientePrefijo = 'F';
+
+        if(siguientePrefijo !== "") {
+            avancesKO[`${siguientePrefijo}${siguienteFila}_${posicionHijo}`] = ganador;
+        }
+        localStorage.setItem('avances_ko_2026', JSON.stringify(avancesKO));
+        cargarPartidos();
+    };
 
     async function actualizarResultado(id, campo, valor) {
         const nuevoValor = valor === '' ? null : parseInt(valor);
