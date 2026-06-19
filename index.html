@@ -4,35 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario Interactivo Mundial 2026</title>
-    <!-- Cliente de Supabase para Tiempo Real -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         h1 { text-align: center; color: #1a1a1a; margin-bottom: 30px; }
-        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; max-width: 1300px; margin: 0 auto; }
-        .grupo-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #007bff; }
-        .grupo-titulo { font-size: 1.3rem; font-weight: bold; padding-bottom: 8px; margin-bottom: 15px; color: #007bff; border-bottom: 1px solid #eee; }
-        .partido { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px; max-width: 1400px; margin: 0 auto; }
+        .grupo-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #007bff; display: flex; flex-direction: column; gap: 20px; }
+        .grupo-titulo { font-size: 1.4rem; font-weight: bold; padding-bottom: 8px; color: #007bff; border-bottom: 2px solid #007bff; margin: 0; }
+        
+        /* Sección de Partidos */
+        .seccion-titulo { font-size: 0.9rem; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .partido { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
         .partido:last-child { border-bottom: none; }
         .equipo { flex: 1; display: flex; align-items: center; font-size: 0.95rem; }
         .equipo.local { justify-content: flex-end; text-align: right; }
         .equipo.visitante { justify-content: flex-start; text-align: left; }
         
-        /* Estilos para las nuevas banderas de imagen */
-        .bandera-img { width: 25px; height: auto; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .bandera-img { width: 24px; height: auto; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .equipo.local .bandera-img { margin-left: 10px; order: 2; }
         .equipo.local .nombre-pais { order: 1; }
         .equipo.visitante .bandera-img { margin-right: 10px; order: 1; }
         .equipo.visitante .nombre-pais { order: 2; }
 
-        .marcador { display: flex; gap: 5px; align-items: center; margin: 0 15px; }
-        .marcador input { width: 40px; text-align: center; font-size: 1.1rem; border: 1px solid #ccc; border-radius: 6px; padding: 5px; font-weight: bold; -moz-appearance: textfield; }
-        .marcador input::-webkit-outer-spin-button, .marcador input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .marcador { display: flex; gap: 5px; align-items: center; margin: 0 12px; }
+        .marcador input { width: 38px; text-align: center; font-size: 1.05rem; border: 1px solid #ccc; border-radius: 6px; padding: 4px; font-weight: bold; }
+        
+        /* Estilos de la Tabla de Posiciones */
+        .tabla-posiciones { w_idth: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; margin-top: 5px; }
+        .tabla-posiciones th { background: #f8f9fa; color: #555; font-weight: bold; padding: 6px 4px; border-bottom: 2px solid #dee2e6; }
+        .tabla-posiciones td { padding: 8px 4px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .tabla-posiciones tr:last-child td { border-bottom: none; }
+        .td-pais { text-align: left; display: flex; align-items: center; gap: 6px; font-weight: 500; }
+        .td-pts { font-weight: bold; color: #28a745; }
+
         @media (max-width: 480px) {
             body { padding: 10px; }
-            .grid-grupos { grid-template-columns: 1fr; }
+            .grid-grupos { grid-template-columns: 1fr; gap: 20px; }
             .equipo { font-size: 0.85rem; }
-            .bandera-img { width: 20px; }
         }
     </style>
 </head>
@@ -42,13 +50,12 @@
     <div class="grid-grupos" id="fixture-container"></div>
 
 <script>
-    // 1. Configuración de tus credenciales de Supabase (ventas7hn-boop)
+    // 1. Configuración de credenciales de Supabase
     const SUPABASE_URL = 'https://jzahrkfecjeypmbwngus.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_42BHwMk5a5rRgT65iY4JEw_9pFr8bzl';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Diccionario de códigos de país de 2 letras vinculados a los nombres en tu base de datos
-    // Esto se usa para cargar imágenes de banderas desde flagcdn.com
+    // Diccionario de códigos de banderas para flagcdn
     const codigosBanderas = {
         "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "República Checa": "cz",
         "Canadá": "ca", "Bosnia": "ba", "Estados Unidos": "us", "Paraguay": "py",
@@ -74,53 +81,150 @@
         const container = document.getElementById('fixture-container');
         container.innerHTML = '';
         
+        // Separar partidos por grupo
         const grupos = {};
         partidos.forEach(p => {
             if (!grupos[p.grupo]) grupos[p.grupo] = [];
             grupos[p.grupo].push(p);
         });
 
-        // Ordenar los grupos alfabéticamente (A, B, C...)
         const gruposOrdenados = Object.keys(grupos).sort();
 
         for (const grupo of gruposOrdenados) {
             const listaPartidos = grupos[grupo];
             const grupoDiv = document.createElement('div');
             grupoDiv.className = 'grupo-card';
-            grupoDiv.innerHTML = `<div class="grupo-titulo">${grupo}</div>`;
-
+            
+            // Título del Grupo
+            const tituloHTML = `<div class="grupo-titulo">${grupo}</div>`;
+            
+            // Generar HTML de la sección de partidos
+            let partidosHTML = `<div><div class="seccion-titulo">Partidos</div>`;
             listaPartidos.forEach(p => {
-                // Obtener el código de país y construir la URL de la imagen de la bandera
-                const codeLocal = codigosBanderas[p.local] || "un"; // 'un' es bandera genérica si no se encuentra
+                const codeLocal = codigosBanderas[p.local] || "un";
                 const codeVis = codigosBanderas[p.visitante] || "un";
-                
                 const imgLocal = `https://flagcdn.com/w40/${codeLocal}.png`;
                 const imgVis = `https://flagcdn.com/w40/${codeVis}.png`;
-
                 const gLocal = p.goles_local !== null ? p.goles_local : '';
                 const gVis = p.goles_visitante !== null ? p.goles_visitante : '';
 
-                const partidoDiv = document.createElement('div');
-                partidoDiv.className = 'partido';
-                partidoDiv.innerHTML = `
-                    <div class="equipo local">
-                        <span class="nombre-pais">${p.local}</span>
-                        <img src="${imgLocal}" alt="Bandera ${p.local}" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
-                    </div>
-                    <div class="marcador">
-                        <input type="number" value="${gLocal}" min="0" onchange="actualizarResultado(${p.id}, 'goles_local', this.value)">
-                        <span>-</span>
-                        <input type="number" value="${gVis}" min="0" onchange="actualizarResultado(${p.id}, 'goles_visitante', this.value)">
-                    </div>
-                    <div class="equipo visitante">
-                        <img src="${imgVis}" alt="Bandera ${p.visitante}" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
-                        <span class="nombre-pais">${p.visitante}</span>
-                    </div>
-                `;
-                grupoDiv.appendChild(partidoDiv);
+                partidosHTML += `
+                    <div class="partido">
+                        <div class="equipo local">
+                            <span class="nombre-pais">${p.local}</span>
+                            <img src="${imgLocal}" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
+                        </div>
+                        <div class="marcador">
+                            <input type="number" value="${gLocal}" min="0" onchange="actualizarResultado(${p.id}, 'goles_local', this.value)">
+                            <span>-</span>
+                            <input type="number" value="${gVis}" min="0" onchange="actualizarResultado(${p.id}, 'goles_visitante', this.value)">
+                        </div>
+                        <div class="equipo visitante">
+                            <img src="${imgVis}" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
+                            <span class="nombre-pais">${p.visitante}</span>
+                        </div>
+                    </div>`;
             });
+            partidosHTML += `</div>`;
+
+            // Calcular y generar HTML de la tabla de posiciones del grupo
+            const tablaHTML = calcularTablaPosiciones(listaPartidos);
+
+            // Juntar todo en la tarjeta del grupo
+            grupoDiv.innerHTML = tituloHTML + tablaHTML + partidosHTML;
             container.appendChild(grupoDiv);
         }
+    }
+
+    // Lógica Matemática para calcular la tabla por grupo
+    function calcularTablaPosiciones(partidos) {
+        const estadisticas = {};
+
+        // Inicializar los 4 países del grupo
+        partidos.forEach(p => {
+            if (!estadisticas[p.local]) estadisticas[p.local] = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dg: 0, pts: 0 };
+            if (!estadisticas[p.visitante]) estadisticas[p.visitante] = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dg: 0, pts: 0 };
+        });
+
+        // Sumar datos si el partido ya tiene resultado
+        partidos.forEach(p => {
+            if (p.goles_local !== null && p.goles_visitante !== null) {
+                const gl = parseInt(p.goles_local);
+                const gv = parseInt(p.goles_visitante);
+
+                estadisticas[p.local].pj++;
+                estadisticas[p.visitante].pj++;
+                estadisticas[p.local].gf += gl;
+                estadisticas[p.local].gc += gv;
+                estadisticas[p.visitante].gf += gv;
+                estadisticas[p.visitante].gc += gl;
+
+                if (gl > gv) {
+                    estadisticas[p.local].pg++;
+                    estadisticas[p.local].pts += 3;
+                    estadisticas[p.visitante].pp++;
+                } else if (gl < gv) {
+                    estadisticas[p.visitante].pg++;
+                    estadisticas[p.visitante].pts += 3;
+                    estadisticas[p.local].pp++;
+                } else {
+                    estadisticas[p.local].pe++;
+                    estadisticas[p.visitante].pe++;
+                    estadisticas[p.local].pts += 1;
+                    estadisticas[p.visitante].pts += 1;
+                }
+                estadisticas[p.local].dg = estadisticas[p.local].gf - estadisticas[p.local].gc;
+                estadisticas[p.visitante].dg = estadisticas[p.visitante].gf - estadisticas[p.visitante].gc;
+            }
+        });
+
+        // Ordenar países por Puntos, luego Diferencia de Goles y Goles a Favor (Criterio FIFA)
+        const listaOrdenada = Object.entries(estadisticas).sort((a, b) => {
+            if (b[1].pts !== a[1].pts) return b[1].pts - a[1].pts;
+            if (b[1].dg !== a[1].dg) return b[1].dg - a[1].dg;
+            return b[1].gf - a[1].gf;
+        });
+
+        // Generar estructura HTML de la tabla
+        let html = `
+        <div>
+            <div class="seccion-titulo">Tabla de Posiciones</div>
+            <table class="tabla-posiciones">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Equipo</th>
+                        <th>PJ</th>
+                        <th>G</th>
+                        <th>E</th>
+                        <th>P</th>
+                        <th>GF</th>
+                        <th>DG</th>
+                        <th>Pts</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        listaOrdenada.forEach(([pais, stat]) => {
+            const code = codigosBanderas[pais] || "un";
+            const imgUrl = `https://flagcdn.com/w20/${code}.png`;
+            html += `
+                <tr>
+                    <td class="td-pais">
+                        <img src="${imgUrl}" style="width:18px;height:auto;border-radius:1px;" onerror="this.src='https://flagcdn.com/w20/un.png'">
+                        <span>${pais}</span>
+                    </td>
+                    <td>${stat.pj}</td>
+                    <td>${stat.pg}</td>
+                    <td>${stat.pe}</td>
+                    <td>${stat.pp}</td>
+                    <td>${stat.gf}</td>
+                    <td>${stat.dg > 0 ? '+' + stat.dg : stat.dg}</td>
+                    <td class="td-pts">${stat.pts}</td>
+                </tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+        return html;
     }
 
     // 3. Guardar el resultado en la base de datos al cambiar el input
@@ -129,7 +233,7 @@
         await _supabase.from('partidos').update({ [campo]: nuevoValor }).eq('id', id);
     }
 
-    // 4. Sincronización en Tiempo Real
+    // 4. Sincronización en Tiempo Real Masiva
     _supabase.channel('cambios-fixture')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'partidos' }, payload => {
             cargarPartidos();
