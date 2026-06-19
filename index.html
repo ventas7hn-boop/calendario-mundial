@@ -7,12 +7,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        h1 { text-align: center; color: #1a1a1a; margin-bottom: 30px; }
-        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px; max-width: 1400px; margin: 0 auto; }
+        h1, h2 { text-align: center; color: #1a1a1a; margin-top: 20px; margin-bottom: 25px; }
+        
+        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px; max-width: 1400px; margin: 0 auto 50px auto; }
         .grupo-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #007bff; display: flex; flex-direction: column; gap: 20px; }
         .grupo-titulo { font-size: 1.4rem; font-weight: bold; padding-bottom: 8px; color: #007bff; border-bottom: 2px solid #007bff; margin: 0; }
         
-        /* Sección de Partidos */
         .seccion-titulo { font-size: 0.9rem; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
         .partido { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
         .partido:last-child { border-bottom: none; }
@@ -29,33 +29,69 @@
         .marcador { display: flex; gap: 5px; align-items: center; margin: 0 12px; }
         .marcador input { width: 38px; text-align: center; font-size: 1.05rem; border: 1px solid #ccc; border-radius: 6px; padding: 4px; font-weight: bold; }
         
-        /* Estilos de la Tabla de Posiciones */
-        .tabla-posiciones { w_idth: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; margin-top: 5px; }
+        .tabla-posiciones { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; margin-top: 5px; }
         .tabla-posiciones th { background: #f8f9fa; color: #555; font-weight: bold; padding: 6px 4px; border-bottom: 2px solid #dee2e6; }
         .tabla-posiciones td { padding: 8px 4px; border-bottom: 1px solid #eee; vertical-align: middle; }
-        .tabla-posiciones tr:last-child td { border-bottom: none; }
         .td-pais { text-align: left; display: flex; align-items: center; gap: 6px; font-weight: 500; }
         .td-pts { font-weight: bold; color: #28a745; }
+
+        /* Estilos del Bracket de Eliminación Directa */
+        .contenedor-bracket { max-width: 1400px; margin: 0 auto; background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; }
+        .bracket-fases { display: flex; gap: 20px; justify-content: space-between; min-width: 1100px; }
+        .columna-fase { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 15px; }
+        .fase-titulo { text-align: center; font-weight: bold; background: #e9ecef; padding: 8px; border-radius: 6px; font-size: 0.9rem; margin-bottom: 10px; color: #495057; }
+        
+        .tarjeta-llave { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .fila-llave-equipo { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 2px 0; }
+        .fila-llave-equipo span { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+        .btn-avanzar { background: #28a745; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
+        .btn-avanzar:hover { background: #218838; }
 
         @media (max-width: 480px) {
             body { padding: 10px; }
             .grid-grupos { grid-template-columns: 1fr; gap: 20px; }
-            .equipo { font-size: 0.85rem; }
         }
     </style>
 </head>
 <body>
 
     <h1>🏆 Fixture Colaborativo - Mundial 2026</h1>
+    
     <div class="grid-grupos" id="fixture-container"></div>
 
+    <hr style="border: 0; border-top: 1px solid #dee2e6; max-width: 1400px; margin: 40px auto;">
+
+    <h2>📊 Segunda Fase - Eliminación Directa (Formato FIFA)</h2>
+    <div class="contenedor-bracket">
+        <div class="bracket-fases">
+            <div class="columna-fase">
+                <div class="fase-titulo">Dieciseisavos (1/16)</div>
+                <div id="fase-32" style="display:flex; flex-direction:column; gap:15px; height:100%; justify-content: space-between;"></div>
+            </div>
+            <div class="columna-fase">
+                <div class="fase-titulo">Octavos de Final</div>
+                <div id="fase-16" style="display:flex; flex-direction:column; gap:30px; height:100%; justify-content: space-around;"></div>
+            </div>
+            <div class="columna-fase">
+                <div class="fase-titulo">Cuartos de Final</div>
+                <div id="fase-8" style="display:flex; flex-direction:column; gap:60px; height:100%; justify-content: space-around;"></div>
+            </div>
+            <div class="columna-fase">
+                <div class="fase-titulo">Semifinal</div>
+                <div id="fase-4" style="display:flex; flex-direction:column; gap:120px; height:100%; justify-content: space-around;"></div>
+            </div>
+            <div class="columna-fase">
+                <div class="fase-titulo">Gran Final</div>
+                <div id="fase-2" style="display:flex; flex-direction:column; justify-content: center; height:100%;"></div>
+            </div>
+        </div>
+    </div>
+
 <script>
-    // 1. Configuración de credenciales de Supabase
     const SUPABASE_URL = 'https://jzahrkfecjeypmbwngus.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_42BHwMk5a5rRgT65iY4JEw_9pFr8bzl';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Diccionario de códigos de banderas para flagcdn
     const codigosBanderas = {
         "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "República Checa": "cz",
         "Canadá": "ca", "Bosnia": "ba", "Estados Unidos": "us", "Paraguay": "py",
@@ -71,17 +107,20 @@
         "Senegal": "sn", "Nueva Zelanda": "nz"
     };
 
-    // 2. Cargar partidos desde la Base de Datos
+    // Estado local para persistir el avance de las llaves K.O. manuales
+    let avancesKO = JSON.parse(localStorage.getItem('avances_ko_2026')) || {};
+
     async function cargarPartidos() {
         const { data: partidos, error } = await _supabase.from('partidos').select('*').order('id');
-        if (partidos) renderizarFixture(partidos);
+        if (partidos) {
+            const clasificados = renderizarFixture(partidos);
+            calcularYRenderizarCruces(clasificados);
+        }
     }
 
     function renderizarFixture(partidos) {
         const container = document.getElementById('fixture-container');
         container.innerHTML = '';
-        
-        // Separar partidos por grupo
         const grupos = {};
         partidos.forEach(p => {
             if (!grupos[p.grupo]) grupos[p.grupo] = [];
@@ -89,22 +128,19 @@
         });
 
         const gruposOrdenados = Object.keys(grupos).sort();
+        const clasificadosPorGrupo = {};
 
         for (const grupo of gruposOrdenados) {
             const listaPartidos = grupos[grupo];
             const grupoDiv = document.createElement('div');
             grupoDiv.className = 'grupo-card';
             
-            // Título del Grupo
             const tituloHTML = `<div class="grupo-titulo">${grupo}</div>`;
-            
-            // Generar HTML de la sección de partidos
             let partidosHTML = `<div><div class="seccion-titulo">Partidos</div>`;
+            
             listaPartidos.forEach(p => {
                 const codeLocal = codigosBanderas[p.local] || "un";
                 const codeVis = codigosBanderas[p.visitante] || "un";
-                const imgLocal = `https://flagcdn.com/w40/${codeLocal}.png`;
-                const imgVis = `https://flagcdn.com/w40/${codeVis}.png`;
                 const gLocal = p.goles_local !== null ? p.goles_local : '';
                 const gVis = p.goles_visitante !== null ? p.goles_visitante : '';
 
@@ -112,7 +148,7 @@
                     <div class="partido">
                         <div class="equipo local">
                             <span class="nombre-pais">${p.local}</span>
-                            <img src="${imgLocal}" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
+                            <img src="https://flagcdn.com/w40/${codeLocal}.png" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
                         </div>
                         <div class="marcador">
                             <input type="number" value="${gLocal}" min="0" onchange="actualizarResultado(${p.id}, 'goles_local', this.value)">
@@ -120,120 +156,185 @@
                             <input type="number" value="${gVis}" min="0" onchange="actualizarResultado(${p.id}, 'goles_visitante', this.value)">
                         </div>
                         <div class="equipo visitante">
-                            <img src="${imgVis}" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
+                            <img src="https://flagcdn.com/w40/${codeVis}.png" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
                             <span class="nombre-pais">${p.visitante}</span>
                         </div>
                     </div>`;
             });
             partidosHTML += `</div>`;
 
-            // Calcular y generar HTML de la tabla de posiciones del grupo
-            const tablaHTML = calcularTablaPosiciones(listaPartidos);
+            const { tablaHTML, clasificados } = obtenerCalculoGrupo(listaPartidos, grupo);
+            clasificadosPorGrupo[grupo] = clasificados;
 
-            // Juntar todo en la tarjeta del grupo
             grupoDiv.innerHTML = tituloHTML + tablaHTML + partidosHTML;
             container.appendChild(grupoDiv);
         }
+        return clasificadosPorGrupo;
     }
 
-    // Lógica Matemática para calcular la tabla por grupo
-    function calcularTablaPosiciones(partidos) {
-        const estadisticas = {};
-
-        // Inicializar los 4 países del grupo
+    function obtenerCalculoGrupo(partidos, nombreGrupo) {
+        const est = {};
         partidos.forEach(p => {
-            if (!estadisticas[p.local]) estadisticas[p.local] = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dg: 0, pts: 0 };
-            if (!estadisticas[p.visitante]) estadisticas[p.visitante] = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dg: 0, pts: 0 };
+            if (!est[p.local]) est[p.local] = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dg: 0, pts: 0, grupo: nombreGrupo };
+            if (!est[p.visitante]) est[p.visitante] = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dg: 0, pts: 0, grupo: nombreGrupo };
         });
 
-        // Sumar datos si el partido ya tiene resultado
         partidos.forEach(p => {
             if (p.goles_local !== null && p.goles_visitante !== null) {
                 const gl = parseInt(p.goles_local);
                 const gv = parseInt(p.goles_visitante);
+                est[p.local].pj++; est[p.visitante].pj++;
+                est[p.local].gf += gl; est[p.local].gc += gv;
+                est[p.visitante].gf += gv; est[p.visitante].gc += gl;
 
-                estadisticas[p.local].pj++;
-                estadisticas[p.visitante].pj++;
-                estadisticas[p.local].gf += gl;
-                estadisticas[p.local].gc += gv;
-                estadisticas[p.visitante].gf += gv;
-                estadisticas[p.visitante].gc += gl;
-
-                if (gl > gv) {
-                    estadisticas[p.local].pg++;
-                    estadisticas[p.local].pts += 3;
-                    estadisticas[p.visitante].pp++;
-                } else if (gl < gv) {
-                    estadisticas[p.visitante].pg++;
-                    estadisticas[p.visitante].pts += 3;
-                    estadisticas[p.local].pp++;
-                } else {
-                    estadisticas[p.local].pe++;
-                    estadisticas[p.visitante].pe++;
-                    estadisticas[p.local].pts += 1;
-                    estadisticas[p.visitante].pts += 1;
-                }
-                estadisticas[p.local].dg = estadisticas[p.local].gf - estadisticas[p.local].gc;
-                estadisticas[p.visitante].dg = estadisticas[p.visitante].gf - estadisticas[p.visitante].gc;
+                if (gl > gv) { est[p.local].pg++; est[p.local].pts += 3; est[p.visitante].pp++; }
+                else if (gl < gv) { est[p.visitante].pg++; est[p.visitante].pts += 3; est[p.local].pp++; }
+                else { est[p.local].pe++; est[p.visitante].pe++; est[p.local].pts += 1; est[p.visitante].pts += 1; }
+                est[p.local].dg = est[p.local].gf - est[p.local].gc;
+                est[p.visitante].dg = est[p.visitante].gf - est[p.visitante].gc;
             }
         });
 
-        // Ordenar países por Puntos, luego Diferencia de Goles y Goles a Favor (Criterio FIFA)
-        const listaOrdenada = Object.entries(estadisticas).sort((a, b) => {
-            if (b[1].pts !== a[1].pts) return b[1].pts - a[1].pts;
-            if (b[1].dg !== a[1].dg) return b[1].dg - a[1].dg;
-            return b[1].gf - a[1].gf;
-        });
+        const lista = Object.entries(est).sort((a, b) => b[1].pts - a[1].pts || b[1].dg - a[1].dg || b[1].gf - a[1].gf);
 
-        // Generar estructura HTML de la tabla
-        let html = `
-        <div>
-            <div class="seccion-titulo">Tabla de Posiciones</div>
-            <table class="tabla-posiciones">
-                <thead>
-                    <tr>
-                        <th style="text-align: left;">Equipo</th>
-                        <th>PJ</th>
-                        <th>G</th>
-                        <th>E</th>
-                        <th>P</th>
-                        <th>GF</th>
-                        <th>DG</th>
-                        <th>Pts</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-        listaOrdenada.forEach(([pais, stat]) => {
+        let html = `<div><div class="seccion-titulo">Tabla de Posiciones</div><table class="tabla-posiciones"><thead><tr><th style="text-align:left;">Equipo</th><th>PJ</th><th>DG</th><th>Pts</th></tr></thead><tbody>`;
+        lista.forEach(([pais, stat]) => {
             const code = codigosBanderas[pais] || "un";
-            const imgUrl = `https://flagcdn.com/w20/${code}.png`;
-            html += `
-                <tr>
-                    <td class="td-pais">
-                        <img src="${imgUrl}" style="width:18px;height:auto;border-radius:1px;" onerror="this.src='https://flagcdn.com/w20/un.png'">
-                        <span>${pais}</span>
-                    </td>
-                    <td>${stat.pj}</td>
-                    <td>${stat.pg}</td>
-                    <td>${stat.pe}</td>
-                    <td>${stat.pp}</td>
-                    <td>${stat.gf}</td>
-                    <td>${stat.dg > 0 ? '+' + stat.dg : stat.dg}</td>
-                    <td class="td-pts">${stat.pts}</td>
-                </tr>`;
+            html += `<tr><td class="td-pais"><img src="https://flagcdn.com/w20/${code}.png" style="width:18px;height:auto;border-radius:1px;" onerror="this.src='https://flagcdn.com/w20/un.png'"><span>${pais}</span></td><td>${stat.pj}</td><td>${stat.dg > 0 ? '+'+stat.dg : stat.dg}</td><td class="td-pts">${stat.pts}</td></tr>`;
         });
-
         html += `</tbody></table></div>`;
-        return html;
+
+        return { tablaHTML: html, clasificados: lista };
     }
 
-    // 3. Guardar el resultado en la base de datos al cambiar el input
+    function calcularYRenderizarCruces(clasificadosPorGrupo) {
+        let primeros = {}; let segundos = {}; let terceros = [];
+
+        Object.keys(clasificadosPorGrupo).forEach(g => {
+            const lista = clasificadosPorGrupo[g];
+            const letra = g.replace("Grupo ", "");
+            primeros[letra] = lista[0] ? lista[0][0] : `1${letra}`;
+            segundos[letra] = lista[1] ? lista[1][0] : `2${letra}`;
+            if(lista[2]) terceros.push({ pais: lista[2][0], pts: lista[2][1].pts, dg: lista[2][1].dg, gf: lista[2][1].gf, grupo: letra });
+        });
+
+        // Ordenar los mejores terceros de todo el mundial
+        terceros.sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);
+        let top3 = {};
+        for(let i=0; i<12; i++) {
+            if(terceros[i]) top3[terceros[i].grupo] = terceros[i].pais;
+        }
+
+        // Función para pescar un tercero comodín si no está definido
+        const get3 = (opciones) => {
+            for(let o of opciones) { if(top3[o]) return top3[o]; }
+            return `3º ${opciones.join('/')}`;
+        };
+
+        // ESTRUCTURA DE LOS 16 CRUCES DIRECTOS OFICIALES DE LA GRAFICA FIFA (Dieciseisavos)
+        // Mapeados uno por uno de forma exacta a tu imagen de izquierda a derecha y arriba a abajo
+        const llavesIniciales = [
+            { id: "L1", e1: primeros["E"], e2: get3(["A","B","C","D","F"]) },
+            { id: "L2", e1: segundos["A"], e2: segundos["B"] },
+            { id: "L3", e1: primeros["B"], e2: get3(["C","D","F","G","H"]) },
+            { id: "L4", e1: segundos["A"], e2: segundos["B"] }, // Cruce simétrico de la gráfica
+            { id: "L5", e1: segundos["K"], e2: segundos["L"] },
+            { id: "L6", e1: primeros["H"], e2: segundos["J"] },
+            { id: "L7", e1: primeros["D"], e2: get3(["B","E","F","I","J"]) },
+            { id: "L8", e1: primeros["G"], e2: segundos["F"] },
+            { id: "L9", e1: primeros["C"], e2: get3(["F","G","H","I","K"]) },
+            { id: "L10", e1: segundos["E"], e2: segundos["I"] },
+            { id: "L11", e1: primeros["A"], e2: get3(["C","E","F","H","I"]) },
+            { id: "L12", e1: primeros["L"], e2: get3(["E","H","I","J","K"]) },
+            { id: "L13", e1: segundos["J"], e2: segundos["H"] },
+            { id: "L14", e1: segundos["D"], e2: segundos["G"] },
+            { id: "L15", e1: primeros["B"], e2: get3(["E","F","G","I","J"]) },
+            { id: "L16", e1: primeros["K"], e2: get3(["D","E","I","J","L"]) }
+        ];
+
+        // RENDERIZAR DIECISEISAVOS (Fase 32)
+        const div32 = document.getElementById('fase-32'); div32.innerHTML = '';
+        llavesIniciales.forEach(ll => {
+            const p1 = avancesKO[ll.id + '_1'] || ll.e1;
+            const p2 = avancesKO[ll.id + '_2'] || ll.e2;
+            div32.appendChild(crearTarjetaLlaveHtml(ll.id, p1, p2, (ganador) => avanzarEtapa(ll.id, ganador, 16)));
+        });
+
+        // RECONSTRUIR FASES SIGUIENTES BASADAS EN EL AVANCE
+        const renderFaseSiguiente = (faseActual, faseDestino, prefixDestino, saltos) => {
+            const divDestino = document.getElementById(`fase-${faseDestino}`);
+            divDestino.innerHTML = '';
+            for (let i = 1; i <= faseDestino; i++) {
+                const idHijo = `${prefixDestino}${i}`;
+                const padreId1 = `L${(i * 2) - 1}`;
+                const padreId2 = `L${i * 2}`;
+                
+                // Si ya estamos en fases avanzadas, hereda del prefijo anterior
+                const p1 = avancesKO[idHijo + '_1'] || avancesKO[padreId1 + '_ganador'] || `Ganador ${padreId1}`;
+                const p2 = avancesKO[idHijo + '_2'] || avancesKO[padreId2 + '_ganador'] || `Ganador ${padreId2}`;
+                
+                divDestino.appendChild(crearTarjetaLlaveHtml(idHijo, p1, p2, (ganador) => avanzarEtapa(idHijo, ganador, faseDestino / 2)));
+            }
+        };
+
+        renderFaseSiguiente(32, 16, "O", 2); // Octavos
+        renderFaseSiguiente(16, 8, "C", 4);  // Cuartos
+        renderFaseSiguiente(8, 4, "S", 8);   // Semifinal
+
+        // Gran Final (Fase 2)
+        const div2 = document.getElementById('fase-2'); div2.innerHTML = '';
+        const p1Final = avancesKO['F1_1'] || avancesKO['S1_ganador'] || "Finalista 1";
+        const p2Final = avancesKO['F1_2'] || avancesKO['S2_ganador'] || "Finalista 2";
+        const campeon = avancesKO['F1_ganador'] ? `🏆 ¡CAMPEÓN: ${avancesKO['F1_ganador']}!` : "Definir Campeón";
+        
+        div2.innerHTML = `<div style="text-align:center; font-weight:bold; color:#ffc107; margin-bottom:10px;">${campeon}</div>`;
+        div2.appendChild(crearTarjetaLlaveHtml('F1', p1Final, p2Final, (ganador) => avanzarEtapa('F1', ganador, 0)));
+    }
+
+    function crearTarjetaLlaveHtml(idLlave, equipo1, equipo2, callbackAvanzar) {
+        const div = document.createElement('div');
+        div.className = 'tarjeta-llave';
+        const cod1 = codigosBanderas[equipo1] || "un";
+        const cod2 = codigosBanderas[equipo2] || "un";
+
+        div.innerHTML = `
+            <div class="fila-llave-equipo">
+                <span><img src="https://flagcdn.com/w20/${cod1}.png" style="width:16px;height:auto;"> ${equipo1}</span>
+                ${equipo1.includes('Ganador') || equipo1.includes('º') || equipo1.includes('ista') ? '' : `<button class="btn-avanzar" onclick="window.ejecutarAvance('${idLlave}', '${equipo1}')">✓</button>`}
+            </div>
+            <div class="fila-llave-equipo">
+                <span><img src="https://flagcdn.com/w20/${cod2}.png" style="width:16px;height:auto;"> ${equipo2}</span>
+                ${equipo2.includes('Ganador') || equipo2.includes('º') || equipo2.includes('ista') ? '' : `<button class="btn-avanzar" onclick="window.ejecutarAvance('${idLlave}', '${equipo2}')">✓</button>`}
+            </div>
+        `;
+        window.ejecutarAvance = (id, ganador) => {
+            avancesKO[id + '_ganador'] = ganador;
+            // Calcular destino automático en la siguiente columna
+            let tipo = id.charAt(0);
+            let num = parseInt(id.replace(/[A-Z]/g, ""));
+            let siguienteFila = Math.ceil(num / 2);
+            let posicionHijo = num % 2 === 0 ? 2 : 1; // 1 = arriba, 2 = abajo
+
+            let siguientePrefijo = "";
+            if (tipo === 'L') siguientePrefijo = 'O';
+            else if (tipo === 'O') siguientePrefijo = 'C';
+            else if (tipo === 'C') siguientePrefijo = 'S';
+            else if (tipo === 'S') siguientePrefijo = 'F';
+
+            if(siguientePrefijo !== "") {
+                avancesKO[`${siguientePrefijo}${siguienteFila}_${posicionHijo}`] = ganador;
+            }
+            localStorage.setItem('avances_ko_2026', JSON.stringify(avancesKO));
+            cargarPartidos();
+        };
+        return div;
+    }
+
     async function actualizarResultado(id, campo, valor) {
         const nuevoValor = valor === '' ? null : parseInt(valor);
         await _supabase.from('partidos').update({ [campo]: nuevoValor }).eq('id', id);
     }
 
-    // 4. Sincronización en Tiempo Real Masiva
     _supabase.channel('cambios-fixture')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'partidos' }, payload => {
             cargarPartidos();
