@@ -7,22 +7,28 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        h1 { text-align: center; color: #1a1a1a; }
-        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .grupo-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .grupo-titulo { font-size: 1.2rem; font-weight: bold; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-bottom: 10px; color: #007bff; }
-        .partido { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        h1 { text-align: center; color: #1a1a1a; margin-bottom: 30px; }
+        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; max-width: 1300px; margin: 0 auto; }
+        .grupo-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #007bff; }
+        .grupo-titulo { font-size: 1.3rem; font-weight: bold; padding-bottom: 8px; margin-bottom: 15px; color: #007bff; border-bottom: 1px solid #eee; }
+        .partido { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+        .partido:last-child { border-bottom: none; }
         .equipo { flex: 1; display: flex; align-items: center; font-size: 0.95rem; }
         .equipo.local { justify-content: flex-end; text-align: right; }
         .equipo.visitante { justify-content: flex-start; text-align: left; }
-        .bandera { font-size: 1.3rem; margin: 0 8px; }
-        .marcador { display: flex; gap: 5px; align-items: center; margin: 0 10px; }
-        .marcador input { width: 35px; text-align: center; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; padding: 3px; font-weight: bold; }
-        /* Optimización para móviles */
+        .bandera { font-size: 1.4rem; }
+        .equipo.local .bandera { margin-left: 8px; order: 2; }
+        .equipo.local .nombre-pais { order: 1; }
+        .equipo.visitante .bandera { margin-right: 8px; order: 1; }
+        .equipo.visitante .nombre-pais { order: 2; }
+        .marcador { display: flex; gap: 5px; align-items: center; margin: 0 15px; }
+        .marcador input { width: 40px; text-align: center; font-size: 1.1rem; border: 1px solid #ccc; border-radius: 6px; padding: 5px; font-weight: bold; -moz-appearance: textfield; }
+        .marcador input::-webkit-outer-spin-button, .marcador input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         @media (max-width: 480px) {
             body { padding: 10px; }
+            .grid-grupos { grid-template-columns: 1fr; }
             .equipo { font-size: 0.85rem; }
-            .bandera { font-size: 1.1rem; }
+            .bandera { font-size: 1.2rem; }
         }
     </style>
 </head>
@@ -32,18 +38,27 @@
     <div class="grid-grupos" id="fixture-container"></div>
 
 <script>
-    // 1. Tus credenciales de Supabase bien estructuradas
+    // 1. Configuración de tus credenciales de Supabase
     const SUPABASE_URL = 'https://jzahrkfecjeypmbwngus.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_42BHwMk5a5rRgT65iY4JEw_9pFr8bzl';
     
-    // Cambiado a _supabase para resolver el SyntaxError de duplicado
+    // Se utiliza '_supabase' para evitar conflictos de declaración de variables
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Diccionario de banderas en Emoji para carga rápida en celulares
+    // Diccionario de banderas con emojis reales vinculados a los nombres de la Base de Datos
     const banderas = {
         "México": "🇲🇽", "Sudáfrica": "🇿🇦", "Corea del Sur": "🇰🇷", "República Checa": "🇨🇿",
         "Canadá": "🇨🇦", "Bosnia": "🇧🇦", "Estados Unidos": "🇺🇸", "Paraguay": "🇵🇾",
-        "Brasil": "🇧🇷", "Marruecos": "🇲🇦", "Alemania": "🇩🇪", "Argentina": "🇦🇷"
+        "Brasil": "🇧🇷", "Marruecos": "🇲🇦", "Alemania": "🇩🇪", "Argentina": "🇦🇷",
+        "Francia": "🇫🇷", "Australia": "🇦🇺", "Egipto": "🇪🇬", "Escocia": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+        "España": "🇪🇸", "Japón": "🇯🇵", "Nigeria": "🇳🇬", "Ecuador": "🇪🇨",
+        "Bélgica": "🇧🇪", "Perú": "🇵🇪", "Irán": "🇮🇷", "Ucrania": "🇺🇦",
+        "Portugal": "🇵🇹", "Ghana": "🇬🇭", "Chile": "🇨🇱", "Polonia": "🇵🇱",
+        "Italia": "🇮🇹", "Camerún": "🇨🇲", "Uruguay": "🇺🇾", "Turquía": "🇹🇷",
+        "Países Bajos": "🇳🇱", "Argelia": "🇩🇿", "Colombia": "🇨🇴", "Austria": "🇦🇹",
+        "Inglaterra": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Túnez": "🇹🇳", "Croacia": "🇭🇷", "Costa Rica": "🇨🇷",
+        "Gales": "🏴󠁧󠁢󠁷󠁬󠁳󠁿", "Arabia Saudita": "🇸🇦", "Suiza": "🇨🇭", "Dinamarca": "🇩🇰",
+        "Senegal": "🇸🇳", "Nueva Zelanda": "🇳🇿"
     };
 
     // 2. Cargar partidos desde la Base de Datos
@@ -76,13 +91,19 @@
                 const partidoDiv = document.createElement('div');
                 partidoDiv.className = 'partido';
                 partidoDiv.innerHTML = `
-                    <div class="equipo local">${p.local} <span class="bandera">${bLocal}</span></div>
+                    <div class="equipo local">
+                        <span class="nombre-pais">${p.local}</span>
+                        <span class="bandera">${bLocal}</span>
+                    </div>
                     <div class="marcador">
                         <input type="number" value="${gLocal}" min="0" onchange="actualizarResultado(${p.id}, 'goles_local', this.value)">
                         <span>-</span>
                         <input type="number" value="${gVis}" min="0" onchange="actualizarResultado(${p.id}, 'goles_visitante', this.value)">
                     </div>
-                    <div class="equipo visitante"><span class="bandera">${bVis}</span> ${p.visitante}</div>
+                    <div class="equipo visitante">
+                        <span class="bandera">${bVis}</span>
+                        <span class="nombre-pais">${p.visitante}</span>
+                    </div>
                 `;
                 grupoDiv.appendChild(partidoDiv);
             });
@@ -90,13 +111,13 @@
         }
     }
 
-    // 3. Guardar el resultado en la nube cuando cambie el número
+    // 3. Guardar el resultado en la base de datos al cambiar el input
     async function actualizarResultado(id, campo, valor) {
         const nuevoValor = valor === '' ? null : parseInt(valor);
         await _supabase.from('partidos').update({ [campo]: nuevoValor }).eq('id', id);
     }
 
-    // 4. Sincronización en TIEMPO REAL para actualización masiva
+    // 4. Sincronización en Tiempo Real
     _supabase.channel('cambios-fixture')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'partidos' }, payload => {
             cargarPartidos();
