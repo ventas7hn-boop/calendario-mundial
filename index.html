@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario Interactivo Mundial 2026</title>
+    <!-- Cliente de Supabase para Tiempo Real -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
@@ -16,11 +17,14 @@
         .equipo { flex: 1; display: flex; align-items: center; font-size: 0.95rem; }
         .equipo.local { justify-content: flex-end; text-align: right; }
         .equipo.visitante { justify-content: flex-start; text-align: left; }
-        .bandera { font-size: 1.4rem; }
-        .equipo.local .bandera { margin-left: 8px; order: 2; }
+        
+        /* Estilos para las nuevas banderas de imagen */
+        .bandera-img { width: 25px; height: auto; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .equipo.local .bandera-img { margin-left: 10px; order: 2; }
         .equipo.local .nombre-pais { order: 1; }
-        .equipo.visitante .bandera { margin-right: 8px; order: 1; }
+        .equipo.visitante .bandera-img { margin-right: 10px; order: 1; }
         .equipo.visitante .nombre-pais { order: 2; }
+
         .marcador { display: flex; gap: 5px; align-items: center; margin: 0 15px; }
         .marcador input { width: 40px; text-align: center; font-size: 1.1rem; border: 1px solid #ccc; border-radius: 6px; padding: 5px; font-weight: bold; -moz-appearance: textfield; }
         .marcador input::-webkit-outer-spin-button, .marcador input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -28,7 +32,7 @@
             body { padding: 10px; }
             .grid-grupos { grid-template-columns: 1fr; }
             .equipo { font-size: 0.85rem; }
-            .bandera { font-size: 1.2rem; }
+            .bandera-img { width: 20px; }
         }
     </style>
 </head>
@@ -38,27 +42,26 @@
     <div class="grid-grupos" id="fixture-container"></div>
 
 <script>
-    // 1. Configuración de tus credenciales de Supabase
+    // 1. Configuración de tus credenciales de Supabase (ventas7hn-boop)
     const SUPABASE_URL = 'https://jzahrkfecjeypmbwngus.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_42BHwMk5a5rRgT65iY4JEw_9pFr8bzl';
-    
-    // Se utiliza '_supabase' para evitar conflictos de declaración de variables
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Diccionario de banderas con emojis reales vinculados a los nombres de la Base de Datos
-    const banderas = {
-        "México": "🇲🇽", "Sudáfrica": "🇿🇦", "Corea del Sur": "🇰🇷", "República Checa": "🇨🇿",
-        "Canadá": "🇨🇦", "Bosnia": "🇧🇦", "Estados Unidos": "🇺🇸", "Paraguay": "🇵🇾",
-        "Brasil": "🇧🇷", "Marruecos": "🇲🇦", "Alemania": "🇩🇪", "Argentina": "🇦🇷",
-        "Francia": "🇫🇷", "Australia": "🇦🇺", "Egipto": "🇪🇬", "Escocia": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-        "España": "🇪🇸", "Japón": "🇯🇵", "Nigeria": "🇳🇬", "Ecuador": "🇪🇨",
-        "Bélgica": "🇧🇪", "Perú": "🇵🇪", "Irán": "🇮🇷", "Ucrania": "🇺🇦",
-        "Portugal": "🇵🇹", "Ghana": "🇬🇭", "Chile": "🇨🇱", "Polonia": "🇵🇱",
-        "Italia": "🇮🇹", "Camerún": "🇨🇲", "Uruguay": "🇺🇾", "Turquía": "🇹🇷",
-        "Países Bajos": "🇳🇱", "Argelia": "🇩🇿", "Colombia": "🇨🇴", "Austria": "🇦🇹",
-        "Inglaterra": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Túnez": "🇹🇳", "Croacia": "🇭🇷", "Costa Rica": "🇨🇷",
-        "Gales": "🏴󠁧󠁢󠁷󠁬󠁳󠁿", "Arabia Saudita": "🇸🇦", "Suiza": "🇨🇭", "Dinamarca": "🇩🇰",
-        "Senegal": "🇸🇳", "Nueva Zelanda": "🇳🇿"
+    // Diccionario de códigos de país de 2 letras vinculados a los nombres en tu base de datos
+    // Esto se usa para cargar imágenes de banderas desde flagcdn.com
+    const codigosBanderas = {
+        "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "República Checa": "cz",
+        "Canadá": "ca", "Bosnia": "ba", "Estados Unidos": "us", "Paraguay": "py",
+        "Brasil": "br", "Marruecos": "ma", "Alemania": "de", "Argentina": "ar",
+        "Francia": "fr", "Australia": "au", "Egipto": "eg", "Escocia": "gb-sct",
+        "España": "es", "Japón": "jp", "Nigeria": "ng", "Ecuador": "ec",
+        "Bélgica": "be", "Perú": "pe", "Irán": "ir", "Ucrania": "ua",
+        "Portugal": "pt", "Ghana": "gh", "Chile": "cl", "Polonia": "pl",
+        "Italia": "it", "Camerún": "cm", "Uruguay": "uy", "Turquía": "tr",
+        "Países Bajos": "nl", "Argelia": "dz", "Colombia": "co", "Austria": "at",
+        "Inglaterra": "gb-eng", "Túnez": "tn", "Croacia": "hr", "Costa Rica": "cr",
+        "Gales": "gb-wls", "Arabia Saudita": "sa", "Suiza": "ch", "Dinamarca": "dk",
+        "Senegal": "sn", "Nueva Zelanda": "nz"
     };
 
     // 2. Cargar partidos desde la Base de Datos
@@ -77,14 +80,23 @@
             grupos[p.grupo].push(p);
         });
 
-        for (const [grupo, listaPartidos] of Object.entries(grupos)) {
+        // Ordenar los grupos alfabéticamente (A, B, C...)
+        const gruposOrdenados = Object.keys(grupos).sort();
+
+        for (const grupo of gruposOrdenados) {
+            const listaPartidos = grupos[grupo];
             const grupoDiv = document.createElement('div');
             grupoDiv.className = 'grupo-card';
             grupoDiv.innerHTML = `<div class="grupo-titulo">${grupo}</div>`;
 
             listaPartidos.forEach(p => {
-                const bLocal = banderas[p.local] || "🏳️";
-                const bVis = banderas[p.visitante] || "🏳️";
+                // Obtener el código de país y construir la URL de la imagen de la bandera
+                const codeLocal = codigosBanderas[p.local] || "un"; // 'un' es bandera genérica si no se encuentra
+                const codeVis = codigosBanderas[p.visitante] || "un";
+                
+                const imgLocal = `https://flagcdn.com/w40/${codeLocal}.png`;
+                const imgVis = `https://flagcdn.com/w40/${codeVis}.png`;
+
                 const gLocal = p.goles_local !== null ? p.goles_local : '';
                 const gVis = p.goles_visitante !== null ? p.goles_visitante : '';
 
@@ -93,7 +105,7 @@
                 partidoDiv.innerHTML = `
                     <div class="equipo local">
                         <span class="nombre-pais">${p.local}</span>
-                        <span class="bandera">${bLocal}</span>
+                        <img src="${imgLocal}" alt="Bandera ${p.local}" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
                     </div>
                     <div class="marcador">
                         <input type="number" value="${gLocal}" min="0" onchange="actualizarResultado(${p.id}, 'goles_local', this.value)">
@@ -101,7 +113,7 @@
                         <input type="number" value="${gVis}" min="0" onchange="actualizarResultado(${p.id}, 'goles_visitante', this.value)">
                     </div>
                     <div class="equipo visitante">
-                        <span class="bandera">${bVis}</span>
+                        <img src="${imgVis}" alt="Bandera ${p.visitante}" class="bandera-img" onerror="this.src='https://flagcdn.com/w40/un.png'">
                         <span class="nombre-pais">${p.visitante}</span>
                     </div>
                 `;
