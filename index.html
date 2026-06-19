@@ -44,11 +44,15 @@
         .tarjeta-llave { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .fila-llave-equipo { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 2px 0; }
         .fila-llave-equipo span { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+        
         .btn-avanzar { background: #28a745; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
         .btn-avanzar:hover { background: #218838; }
         
-        .btn-reset { display: block; margin: -10px auto 20px auto; background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: bold; }
-        .btn-reset:hover { background: #c82333; }
+        .btn-retroceder { background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
+        .btn-retroceder:hover { background: #c82333; }
+        
+        .btn-reset { display: block; margin: -10px auto 20px auto; background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: bold; }
+        .btn-reset:hover { background: #5a6268; }
 
         @media (max-width: 480px) {
             body { padding: 10px; }
@@ -65,7 +69,7 @@
     <hr style="border: 0; border-top: 1px solid #dee2e6; max-width: 1400px; margin: 40px auto;">
 
     <h2>📊 Segunda Fase - Eliminación Directa (Formato FIFA Oficial)</h2>
-    <button class="btn-reset" onclick="reiniciarBracket()">🔄 Limpiar Memoria y Reiniciar Bracket</button>
+    <button class="btn-reset" onclick="reiniciarBracket()">🔄 Limpiar Todo el Bracket</button>
     
     <div class="contenedor-bracket">
         <div class="bracket-fases">
@@ -115,7 +119,7 @@
     let avancesKO = JSON.parse(localStorage.getItem('avances_ko_2026')) || {};
 
     function reiniciarBracket() {
-        if(confirm("¿Seguro que quieres reiniciar el bracket? Esto borrará las predicciones de las llaves finales.")) {
+        if(confirm("¿Seguro que quieres reiniciar el bracket completo?")) {
             localStorage.removeItem('avances_ko_2026');
             avancesKO = {};
             cargarPartidos();
@@ -241,7 +245,6 @@
             return `3º ${opciones.join('/')}`;
         };
 
-        // MATRIZ OFICIAL CORREGIDA DE LAS 16 LLAVES DE TU IMAGEN
         const llavesIniciales = [
             { id: "L1", e1: primeros["E"], e2: get3(["A","B","C","D","F"]) },
             { id: "L2", e1: segundos["A"], e2: segundos["B"] },
@@ -257,7 +260,7 @@
             { id: "L11", e1: segundos["E"], e2: segundos["I"] },
             { id: "L12", e1: primeros["A"], e2: get3(["C","E","F","H","I"]) },
             { id: "L13", e1: primeros["L"], e2: get3(["E","H","I","J","K"]) },
-            { id: "L14", e1: primeros["J"], e2: segundos["H"] }, // 👈 ¡1J y 2H visibles!
+            { id: "L14", e1: primeros["J"], e2: segundos["H"] }, 
             { id: "L15", e1: segundos["D"], e2: segundos["G"] },
             { id: "L16", e1: primeros["B"], e2: get3(["E","F","G","I","J"]) }
         ];
@@ -299,14 +302,38 @@
         const cod1 = codigosBanderas[equipo1] || "un";
         const cod2 = codigosBanderas[equipo2] || "un";
 
+        const esInvalido1 = equipo1.includes('Ganador') || equipo1.includes('º') || equipo1.includes('ista');
+        const esInvalido2 = equipo2.includes('Ganador') || equipo2.includes('º') || equipo2.includes('ista');
+
+        const ganadorActual = avancesKO[idLlave + '_ganador'];
+
+        let btn1 = '';
+        let btn2 = '';
+
+        if (!esInvalido1) {
+            if (ganadorActual === equipo1) {
+                btn1 = `<button class="btn-retroceder" onclick="window.revertirAvance('${idLlave}')">❌</button>`;
+            } else if (!ganadorActual) {
+                btn1 = `<button class="btn-avanzar" onclick="window.ejecutarAvance('${idLlave}', '${equipo1}')">✓</button>`;
+            }
+        }
+
+        if (!esInvalido2) {
+            if (ganadorActual === equipo2) {
+                btn2 = `<button class="btn-retroceder" onclick="window.revertirAvance('${idLlave}')">❌</button>`;
+            } else if (!ganadorActual) {
+                btn2 = `<button class="btn-avanzar" onclick="window.ejecutarAvance('${idLlave}', '${equipo2}')">✓</button>`;
+            }
+        }
+
         div.innerHTML = `
             <div class="fila-llave-equipo">
                 <span><img src="https://flagcdn.com/w20/${cod1}.png" style="width:16px;height:auto;"> ${equipo1}</span>
-                ${equipo1.includes('Ganador') || equipo1.includes('º') || equipo1.includes('ista') ? '' : `<button class="btn-avanzar" onclick="window.ejecutarAvance('${idLlave}', '${equipo1}')">✓</button>`}
+                ${btn1}
             </div>
             <div class="fila-llave-equipo">
                 <span><img src="https://flagcdn.com/w20/${cod2}.png" style="width:16px;height:auto;"> ${equipo2}</span>
-                ${equipo2.includes('Ganador') || equipo2.includes('º') || equipo2.includes('ista') ? '' : `<button class="btn-avanzar" onclick="window.ejecutarAvance('${idLlave}', '${equipo2}')">✓</button>`}
+                ${btn2}
             </div>
         `;
         return div;
@@ -327,6 +354,31 @@
 
         if(siguientePrefijo !== "") {
             avancesKO[`${siguientePrefijo}${siguienteFila}_${posicionHijo}`] = ganador;
+        }
+        localStorage.setItem('avances_ko_2026', JSON.stringify(avancesKO));
+        cargarPartidos();
+    };
+
+    window.revertirAvance = (id) => {
+        delete avancesKO[id + '_ganador'];
+        let tipo = id.charAt(0);
+        let num = parseInt(id.replace(/[A-Z]/g, ""));
+        let siguienteFila = Math.ceil(num / 2);
+        let posicionHijo = num % 2 === 0 ? 2 : 1;
+
+        let siguientePrefijo = "";
+        if (tipo === 'L') siguientePrefijo = 'O';
+        else if (tipo === 'O') siguientePrefijo = 'C';
+        else if (tipo === 'C') siguientePrefijo = 'S';
+        else if (tipo === 'S') siguientePrefijo = 'F';
+
+        if(siguientePrefijo !== "") {
+            const claveHijo = `${siguientePrefijo}${siguienteFila}_${posicionHijo}`;
+            // Si el que eliminamos también había avanzado más adelante, revertimos en cadena
+            if (avancesKO[claveHijo + '_ganador']) {
+                window.revertirAvance(`${siguientePrefijo}${siguienteFila}`);
+            }
+            delete avancesKO[claveHijo];
         }
         localStorage.setItem('avances_ko_2026', JSON.stringify(avancesKO));
         cargarPartidos();
