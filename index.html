@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario Interactivo Mundial 2026</title>
-    <!-- Cliente de Supabase para Tiempo Real -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
@@ -33,22 +32,23 @@
     <div class="grid-grupos" id="fixture-container"></div>
 
 <script>
-    // 1. Reemplaza con las credenciales de tu proyecto de Supabase
-    const SUPABASE_URL = 'https://jzahrkfecjeypmbwngus.supabase.co/rest/v1/';
+    // 1. Tus credenciales de Supabase bien estructuradas
+    const SUPABASE_URL = 'https://jzahrkfecjeypmbwngus.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_42BHwMk5a5rRgT65iY4JEw_9pFr8bzl';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Cambiado a _supabase para resolver el SyntaxError de duplicado
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Diccionario de banderas en Emoji (Rendimiento rápido en celulares)
+    // Diccionario de banderas en Emoji para carga rápida en celulares
     const banderas = {
         "México": "🇲🇽", "Sudáfrica": "🇿🇦", "Corea del Sur": "🇰🇷", "República Checa": "🇨🇿",
         "Canadá": "🇨🇦", "Bosnia": "🇧🇦", "Estados Unidos": "🇺🇸", "Paraguay": "🇵🇾",
         "Brasil": "🇧🇷", "Marruecos": "🇲🇦", "Alemania": "🇩🇪", "Argentina": "🇦🇷"
-        // Agrega el resto de los 48 países aquí...
     };
 
-    // 2. Cargar partidos desde la Base de Datos al iniciar
+    // 2. Cargar partidos desde la Base de Datos
     async function cargarPartidos() {
-        const { data: partidos, error } = await supabase.from('partidos').select('*').order('id');
+        const { data: partidos, error } = await _supabase.from('partidos').select('*').order('id');
         if (partidos) renderizarFixture(partidos);
     }
 
@@ -56,7 +56,6 @@
         const container = document.getElementById('fixture-container');
         container.innerHTML = '';
         
-        // Agrupar partidos por su grupo correspondiente
         const grupos = {};
         partidos.forEach(p => {
             if (!grupos[p.grupo]) grupos[p.grupo] = [];
@@ -91,16 +90,16 @@
         }
     }
 
-    // 3. Guardar el resultado en la nube cuando un usuario cambie el número
+    // 3. Guardar el resultado en la nube cuando cambie el número
     async function actualizarResultado(id, campo, valor) {
         const nuevoValor = valor === '' ? null : parseInt(valor);
-        await supabase.from('partidos').update({ [campo]: nuevoValor }).eq('id', id);
+        await _supabase.from('partidos').update({ [campo]: nuevoValor }).eq('id', id);
     }
 
-    // 4. 🔥 MAGIA: Escuchar cambios en TIEMPO REAL. Si "Usuario A" cambia un gol, "Usuario B" lo ve sin recargar
-    supabase.channel('cambios-fixture')
-        .on('postgres_changes', { event: 'UPDATE', scheme: 'public', table: 'partidos' }, payload => {
-            cargarPartidos(); // Recarga automáticamente para todos los usuarios conectados
+    // 4. Sincronización en TIEMPO REAL para actualización masiva
+    _supabase.channel('cambios-fixture')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'partidos' }, payload => {
+            cargarPartidos();
         })
         .subscribe();
 
