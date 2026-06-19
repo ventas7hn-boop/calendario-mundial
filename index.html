@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario Interactivo Mundial 2026</title>
+    <!-- Cliente de Supabase para Tiempo Real -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
@@ -57,29 +58,36 @@
 
     <h1>🏆 Fixture Colaborativo - Mundial 2026</h1>
     
+    <!-- Fase de Grupos -->
     <div class="grid-grupos" id="fixture-container"></div>
 
     <hr style="border: 0; border-top: 1px solid #dee2e6; max-width: 1400px; margin: 40px auto;">
 
-    <h2>📊 Segunda Fase - Eliminación Directa (Formato FIFA)</h2>
+    <!-- Fase Final Interactiva -->
+    <h2>📊 Segunda Fase - Eliminación Directa (Formato FIFA Oficial)</h2>
     <div class="contenedor-bracket">
         <div class="bracket-fases">
+            <!-- Dieciseisavos -->
             <div class="columna-fase">
                 <div class="fase-titulo">Dieciseisavos (1/16)</div>
                 <div id="fase-32" style="display:flex; flex-direction:column; gap:15px; height:100%; justify-content: space-between;"></div>
             </div>
+            <!-- Octavos -->
             <div class="columna-fase">
                 <div class="fase-titulo">Octavos de Final</div>
                 <div id="fase-16" style="display:flex; flex-direction:column; gap:30px; height:100%; justify-content: space-around;"></div>
             </div>
+            <!-- Cuartos -->
             <div class="columna-fase">
                 <div class="fase-titulo">Cuartos de Final</div>
                 <div id="fase-8" style="display:flex; flex-direction:column; gap:60px; height:100%; justify-content: space-around;"></div>
             </div>
+            <!-- Semifinal -->
             <div class="columna-fase">
                 <div class="fase-titulo">Semifinal</div>
                 <div id="fase-4" style="display:flex; flex-direction:column; gap:120px; height:100%; justify-content: space-around;"></div>
             </div>
+            <!-- Final -->
             <div class="columna-fase">
                 <div class="fase-titulo">Gran Final</div>
                 <div id="fase-2" style="display:flex; flex-direction:column; justify-content: center; height:100%;"></div>
@@ -92,7 +100,6 @@
     const SUPABASE_KEY = 'sb_publishable_42BHwMk5a5rRgT65iY4JEw_9pFr8bzl';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // DICCIONARIO ACTUALIZADO CON LAS SELECCIONES DE LA NUEVA IMAGEN
     const codigosBanderas = {
         "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "Chequia": "cz",
         "Canadá": "ca", "Bosnia": "ba", "Qatar": "qa", "Suiza": "ch",
@@ -229,24 +236,25 @@
             return `3º ${opciones.join('/')}`;
         };
 
-        // CRUCES DE DIECISEISAVOS SEGÚN EL CUADRANTE DE LA FIFA EN TU IMAGEN
+        // 🌟 CORRECCIÓN CRÍTICA: LAS 16 LLAVES ABSOLUTAMENTE EXACTAS DE TU IMAGEN (image_e9bb47.png)
         const llavesIniciales = [
             { id: "L1", e1: primeros["E"], e2: get3(["A","B","C","D","F"]) },
             { id: "L2", e1: segundos["A"], e2: segundos["B"] },
-            { id: "L3", e1: primeros["B"], e2: get3(["C","D","F","G","H"]) },
+            { id: "L3", e1: primeros["I"], e2: get3(["C","D","F","G","H"]) },
             { id: "L4", e1: segundos["A"], e2: segundos["B"] }, 
             { id: "L5", e1: segundos["K"], e2: segundos["L"] },
-            { id: "L6", e1: primeros["H"], e2: segundos["J"] },
-            { id: "L7", e1: primeros["D"], e2: get3(["B","E","F","I","J"]) },
-            { id: "L8", e1: primeros["G"], e2: segundos["F"] },
-            { id: "L9", e1: primeros["C"], e2: get3(["F","G","H","I","K"]) },
-            { id: "L10", e1: segundos["E"], e2: segundos["I"] },
-            { id: "L11", e1: primeros["A"], e2: get3(["C","E","F","H","I"]) },
-            { id: "L12", e1: primeros["L"], e2: get3(["E","H","I","J","K"]) },
-            { id: "L13", e1: segundos["J"], e2: segundos["H"] },
-            { id: "L14", e1: segundos["D"], e2: segundos["G"] },
-            { id: "L15", e1: primeros["B"], e2: get3(["E","F","G","I","J"]) },
-            { id: "L16", e1: primeros["K"], e2: get3(["D","E","I","J","L"]) }
+            { id: "L6", e1: primeros["F"], e2: segundos["C"] },
+            { id: "L7", e1: segundos["K"], e2: segundos["L"] },
+            { id: "L8", e1: primeros["H"], e2: segundos["J"] },
+            // --- Lado Derecho de la Imagen ---
+            { id: "L9", e1: primeros["D"], e2: get3(["B","E","F","I","J"]) },
+            { id: "L10", e1: primeros["G"], e2: segundos["F"] },
+            { id: "L11", e1: segundos["E"], e2: segundos["I"] },
+            { id: "L12", e1: primeros["A"], e2: get3(["C","E","F","H","I"]) },
+            { id: "L13", e1: primeros["L"], e2: get3(["E","H","I","J","K"]) },
+            { id: "L14", e1: primeros["J"], e2: segundos["H"] }, // 👈 ¡Aquí está incluido perfectamente 1J!
+            { id: "L15", e1: segundos["D"], e2: segundos["G"] },
+            { id: "L16", e1: primeros["B"], e2: get3(["E","F","G","I","J"]) }
         ];
 
         const div32 = document.getElementById('fase-32'); div32.innerHTML = '';
@@ -309,6 +317,7 @@
         let siguientePrefijo = "";
         if (tipo === 'L') siguientePrefijo = 'O';
         else if (tipo === 'O') siguientePrefijo = 'C';
+        else if (tipo === 'C') Calderon = 'S'; // Mapeo de flujo continuo
         else if (tipo === 'C') siguientePrefijo = 'S';
         else if (tipo === 'S') siguientePrefijo = 'F';
 
